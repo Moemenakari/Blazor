@@ -1,0 +1,73 @@
+@page "/orders"
+@inject StoreService Store
+
+<PageTitle>Orders · Cedar Market Admin</PageTitle>
+
+<h1>Orders</h1>
+
+<div class="toolbar">
+    <select @bind="filter" aria-label="Filter by status">
+        <option value="">All statuses</option>
+        @foreach (var status in Enum.GetValues<OrderStatus>())
+        {
+            <option value="@status">@status</option>
+        }
+    </select>
+</div>
+
+<section class="card">
+    <table>
+        <thead>
+            <tr><th>#</th><th>Customer</th><th>Date</th><th>Items</th><th class="num">Total</th><th>Status</th><th></th></tr>
+        </thead>
+        <tbody>
+            @foreach (var order in Filtered)
+            {
+                <tr @key="order.Id">
+                    <td>@order.Id</td>
+                    <td>@order.CustomerEmail</td>
+                    <td>@order.CreatedAt.ToString("dd MMM yyyy")</td>
+                    <td>@string.Join(", ", order.Lines.Select(l => $"{l.Quantity} × {l.ProductName}"))</td>
+                    <td class="num">@order.Total.ToString("C")</td>
+                    <td><span class="badge status-@order.Status.ToString().ToLowerInvariant()">@order.Status</span></td>
+                    <td class="row-actions">
+                        @foreach (var next in Enum.GetValues<OrderStatus>().Where(s => StoreService.CanMove(order.Status, s)))
+                        {
+                            <button class="@(next == OrderStatus.Cancelled ? "danger" : "")" @onclick="() => Move(order, next)">
+                                @Label(next)
+                            </button>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    @if (!Filtered.Any())
+    {
+        <p class="muted">No orders with this status.</p>
+    }
+</section>
+
+@code {
+    private IReadOnlyList<Order> orders = [];
+    private string filter = "";
+
+    private IEnumerable<Order> Filtered =>
+        filter == "" ? orders : orders.Where(o => o.Status.ToString() == filter);
+
+    protected override void OnInitialized() => orders = Store.GetOrders();
+
+    private void Move(Order order, OrderStatus next)
+    {
+        Store.ChangeStatus(order.Id, next);
+        orders = Store.GetOrders();
+    }
+
+    private static string Label(OrderStatus next) => next switch
+    {
+        OrderStatus.Paid => "Mark paid",
+        OrderStatus.Shipped => "Mark shipped",
+        OrderStatus.Cancelled => "Cancel",
+        _ => next.ToString(),
+    };
+}

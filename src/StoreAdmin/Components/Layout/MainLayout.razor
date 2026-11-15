@@ -1,0 +1,20 @@
+@inherits LayoutComponentBase
+
+<header class="topbar">
+    <a class="brand" href="">Cedar Market <span>Admin</span></a>
+    <nav>
+        <NavLink href="" Match="NavLinkMatch.All">Dashboard</NavLink>
+        <NavLink href="products">Products</NavLink>
+        <NavLink href="orders">Orders</NavLink>
+    </nav>
+</header>
+
+<main class="page">
+    @Body
+</main>
+
+<div id="blazor-error-ui">
+    An unhandled error has occurred.
+    <a href="" class="reload">Reload</a>
+    <a class="dismiss">🗙</a>
+</div>

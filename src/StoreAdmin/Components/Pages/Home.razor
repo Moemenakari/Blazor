@@ -1,0 +1,62 @@
+@page "/"
+@inject StoreService Store
+
+<PageTitle>Dashboard · Cedar Market Admin</PageTitle>
+
+<h1>Dashboard</h1>
+
+<section class="tiles">
+    <div class="tile"><span>Revenue</span><strong>@summary.Revenue.ToString("C")</strong></div>
+    <div class="tile"><span>Orders</span><strong>@summary.OrderCount</strong></div>
+    <div class="tile"><span>Average order</span><strong>@summary.AverageOrder.ToString("C")</strong></div>
+    <div class="tile"><span>Waiting for payment</span><strong>@summary.PendingCount</strong></div>
+</section>
+
+<div class="columns">
+    <section class="card">
+        <h2>Top products</h2>
+        @if (summary.TopProducts.Count == 0)
+        {
+            <p class="muted">No sales yet.</p>
+        }
+        else
+        {
+            var best = summary.TopProducts.Max(p => p.Revenue);
+            <ul class="bars">
+                @foreach (var item in summary.TopProducts)
+                {
+                    <li>
+                        <div class="bar-label"><span>@item.Name</span><span>@item.Revenue.ToString("C") · @item.Units sold</span></div>
+                        <div class="bar"><div style="width:@((item.Revenue / best * 100).ToString("0", System.Globalization.CultureInfo.InvariantCulture))%"></div></div>
+                    </li>
+                }
+            </ul>
+        }
+    </section>
+
+    <section class="card">
+        <h2>Low stock (≤ @StoreService.LowStockThreshold)</h2>
+        @if (summary.LowStock.Count == 0)
+        {
+            <p class="muted">All products are well stocked.</p>
+        }
+        else
+        {
+            <table>
+                <thead><tr><th>Product</th><th class="num">Left</th></tr></thead>
+                <tbody>
+                    @foreach (var product in summary.LowStock)
+                    {
+                        <tr><td>@product.Name</td><td class="num"><span class="badge warn">@product.Stock</span></td></tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </section>
+</div>
+
+@code {
+    private DashboardSummary summary = default!;
+
+    protected override void OnInitialized() => summary = Store.GetSummary();
+}

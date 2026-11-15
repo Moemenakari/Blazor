@@ -1,0 +1,118 @@
+@page "/products"
+@inject StoreService Store
+
+<PageTitle>Products · Cedar Market Admin</PageTitle>
+
+<div class="page-head">
+    <h1>Products</h1>
+    <button class="primary" @onclick="StartNew">Add product</button>
+</div>
+
+<div class="toolbar">
+    <input type="search" placeholder="Search by name…" @bind="search" @bind:event="oninput" aria-label="Search products" />
+    <select @bind="category" aria-label="Filter by category">
+        <option value="">All categories</option>
+        @foreach (var name in products.Select(p => p.Category).Distinct().Order())
+        {
+            <option value="@name">@name</option>
+        }
+    </select>
+</div>
+
+@if (message is not null)
+{
+    <p class="notice" role="status">@message</p>
+}
+
+@if (editing is not null)
+{
+    <section class="card">
+        <h2>@(editing.Id == 0 ? "New product" : $"Edit {editing.Name}")</h2>
+        <EditForm Model="editing" OnValidSubmit="Save" FormName="product">
+            <DataAnnotationsValidator />
+            <div class="form-grid">
+                <label>Name<InputText @bind-Value="editing.Name" /><ValidationMessage For="() => editing.Name" /></label>
+                <label>Category<InputText @bind-Value="editing.Category" /><ValidationMessage For="() => editing.Category" /></label>
+                <label>Price<InputNumber @bind-Value="editing.Price" /><ValidationMessage For="() => editing.Price" /></label>
+                <label>Stock<InputNumber @bind-Value="editing.Stock" /><ValidationMessage For="() => editing.Stock" /></label>
+            </div>
+            <div class="actions">
+                <button type="submit" class="primary">Save</button>
+                <button type="button" @onclick="() => editing = null">Cancel</button>
+            </div>
+        </EditForm>
+    </section>
+}
+
+<section class="card">
+    <table>
+        <thead>
+            <tr><th>Name</th><th>Category</th><th class="num">Price</th><th class="num">Stock</th><th></th></tr>
+        </thead>
+        <tbody>
+            @foreach (var product in Filtered)
+            {
+                <tr @key="product.Id">
+                    <td>@product.Name</td>
+                    <td>@product.Category</td>
+                    <td class="num">@product.Price.ToString("C")</td>
+                    <td class="num">
+                        <span class="badge @(product.Stock <= StoreService.LowStockThreshold ? "warn" : "ok")">@product.Stock</span>
+                    </td>
+                    <td class="row-actions">
+                        <button @onclick="() => StartEdit(product)">Edit</button>
+                        <button class="danger" @onclick="() => Delete(product)">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    @if (!Filtered.Any())
+    {
+        <p class="muted">No products match the filter.</p>
+    }
+</section>
+
+@code {
+    private IReadOnlyList<Product> products = [];
+    private Product? editing;
+    private string search = "";
+    private string category = "";
+    private string? message;
+
+    private IEnumerable<Product> Filtered => products
+        .Where(p => category == "" || p.Category == category)
+        .Where(p => p.Name.Contains(search.Trim(), StringComparison.OrdinalIgnoreCase));
+
+    protected override void OnInitialized() => Reload();
+
+    private void Reload() => products = Store.GetProducts();
+
+    private void StartNew()
+    {
+        message = null;
+        editing = new Product();
+    }
+
+    private void StartEdit(Product product)
+    {
+        message = null;
+        editing = product.Clone();
+    }
+
+    private void Save()
+    {
+        var saved = Store.SaveProduct(editing!);
+        message = $"Saved {saved.Name}.";
+        editing = null;
+        Reload();
+    }
+
+    private void Delete(Product product)
+    {
+        message = Store.DeleteProduct(product.Id)
+            ? $"Deleted {product.Name}."
+            : $"{product.Name} is part of existing orders and cannot be deleted.";
+        Reload();
+    }
+}
