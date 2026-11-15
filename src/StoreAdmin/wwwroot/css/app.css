@@ -118,3 +118,4 @@ h1:focus {
     border-color: #929292;
 }
 .row-actions button + button { margin-left: 6px; }
+.loading { text-align: center; padding: 80px 16px; color: var(--muted); }

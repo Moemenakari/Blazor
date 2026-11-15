@@ -1,6 +1,7 @@
 # Cedar Market Admin — Blazor
 
-Back-office dashboard for a small online grocery store, built with **Blazor Server on .NET 8**.
+Back-office dashboard for a small online grocery store, built with **Blazor WebAssembly on .NET 8**.
+The whole app is C# running in the browser, so it deploys as a static site.
 
 ![Dashboard](docs/dashboard.png)
 
@@ -21,7 +22,7 @@ Back-office dashboard for a small online grocery store, built with **Blazor Serv
 
 ## Tech
 
-C# 12 · .NET 8 · Blazor (interactive server rendering) · DataAnnotations validation · xUnit
+C# 12 · .NET 8 · Blazor WebAssembly · DataAnnotations validation · xUnit
 
 ## Run it
 
@@ -39,14 +40,15 @@ dotnet test
 
 ```
 src/StoreAdmin
-  Components/Pages     Dashboard, Products, Orders
-  Components/Layout    Top navigation
-  Models               Product, Order, OrderLine
-  Services             StoreService (rules + data), SeedData
+  Pages      Dashboard, Products, Orders
+  Layout     Top navigation
+  Models     Product, Order, OrderLine
+  Services   StoreService (rules + data), SeedData
 tests/StoreAdmin.Tests StoreService unit tests
 ```
 
-Data is kept in memory and seeded on start, so the app runs with no database setup.
+Data is kept in memory and seeded on start, so the app runs with no database setup
+(changes reset when the page is reloaded).
 `StoreService` is the only class that touches data, so it can be replaced by an EF Core
 or HTTP-backed implementation without changing the pages.
 

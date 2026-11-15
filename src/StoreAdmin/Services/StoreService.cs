@@ -3,7 +3,7 @@ using StoreAdmin.Models;
 namespace StoreAdmin.Services;
 
 /// <summary>
-/// In-memory store data. Registered as a singleton so every browser tab sees the same state.
+/// In-memory store data, registered as a singleton for the lifetime of the app.
 /// Swap this class for an EF Core or HTTP implementation to connect a real backend.
 /// </summary>
 public class StoreService
